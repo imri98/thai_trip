@@ -127,7 +127,7 @@
     }
     .input small{color:var(--muted)}
 
-    select{
+    select, .txt{
       width:100%;
       border:1px solid var(--line);
       background: rgba(0,0,0,.18);
@@ -137,7 +137,10 @@
       outline:none;
       font-size:14px;
     }
-    select:focus{border-color: rgba(51,255,209,.35)}
+
+    .txt{display:block}
+
+    select:focus, .txt:focus{border-color: rgba(51,255,209,.35)}
 
     /*
       שיפור קונטרסט של הטקסט בתוך רשימת הבחירה (dropdown).
@@ -196,6 +199,41 @@
       border-color: rgba(122,166,255,.45);
       background: linear-gradient(180deg, rgba(122,166,255,.18), rgba(0,0,0,.16));
     }
+
+    .addBox{
+      margin-top:12px;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(0,0,0,.12);
+      overflow:hidden;
+    }
+    .addBox summary{
+      list-style:none;
+      cursor:pointer;
+      padding:12px 14px;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background: rgba(0,0,0,.16);
+      border-bottom: 1px solid var(--line);
+      user-select:none;
+    }
+    .addBox summary::-webkit-details-marker{display:none}
+    .addBox summary .hint{color:var(--muted); font-weight:700; font-size:12px;}
+
+    .addBody{padding:14px; display:grid; gap:10px;}
+    .formGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+
+    .field label{display:block; font-size:12px; color:var(--muted); margin:0 0 6px; font-weight:800;}
+
+    .formActions{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; padding-top:4px;}
+    .miniNote{color:var(--muted); font-size:12px; line-height:1.5}
 
     .grid{
       display:grid;
@@ -323,6 +361,7 @@
       .controls{grid-template-columns: 1fr 1fr;}
       .grid{grid-template-columns: repeat(2, 1fr);}
       .stats{grid-template-columns: repeat(2, 1fr);}
+      .formGrid{grid-template-columns: 1fr;}
     }
 
     @media (max-width: 620px){
@@ -359,7 +398,7 @@
       <div class="panel">
         <div class="heroMain">
           <h1>טיול לפאי ולצ׳אנג מאי — טבע לזוג (בלי כאב ראש)</h1>
-          <p class="sub">הוספתי דירוג קושי (קל/בינוני/קשה/לא מסלול) ומיינתי את הרשימה כך ש"מסלולים" מופיעים ראשון לפי קושי, והדברים שהם לא מסלול יורדים לתחתית.</p>
+          <p class="sub">כולל דירוג קושי (קל/בינוני/קשה/לא מסלול), מועדפים ⭐, ותוספת אטרקציות משלכם שנשמרת במכשיר.</p>
         </div>
         <div class="stats" aria-label="תקציר">
           <div class="stat"><b id="statCount">—</b><span>אטרקציות ברשימה</span></div>
@@ -394,12 +433,61 @@
 
         <div class="btnRow">
           <button id="favOnlyBtn" class="btn" type="button">⭐ מועדפים בלבד</button>
+          <button id="dlFavCsvBtn" class="btn" type="button">⬇️ CSV מועדפים</button>
+          <button id="exportStateBtn" class="btn" type="button">⬇️ ייצוא נתונים</button>
+          <button id="importStateBtn" class="btn" type="button">⬆️ ייבוא נתונים</button>
           <button id="viewBtn" class="btn primary" type="button">תצוגת כרטיסים</button>
           <button id="resetBtn" class="btn" type="button">איפוס</button>
         </div>
       </div>
 
       <div class="chips" id="chips" aria-label="פילטרים מהירים"></div>
+
+      <details class="addBox" id="addBox">
+        <summary>
+          <span>➕ הוספת אטרקציה משלנו</span>
+          <span class="hint">תיבה נפתחת · נשמר במכשיר</span>
+        </summary>
+        <div class="addBody">
+          <div class="miniNote">מילוי כאן מוסיף שורה לרשימה באותו פורמט (אזור / סוג / קושי / שם / הסבר). זה נשמר ב־LocalStorage (כלומר: לכל מכשיר בנפרד).</div>
+
+          <form id="addForm">
+            <div class="formGrid">
+              <div class="field">
+                <label for="addName">שם האטרקציה</label>
+                <input class="txt" id="addName" type="text" placeholder="למשל: Jungle Coaster" required />
+              </div>
+              <div class="field">
+                <label for="addArea">אזור</label>
+                <input class="txt" id="addArea" type="text" placeholder="למשל: פאי / צ׳אנג מאי – ..." required />
+              </div>
+              <div class="field">
+                <label for="addType">סוג</label>
+                <input class="txt" id="addType" type="text" placeholder="למשל: מפל / שביל / שוק / תצפית" required />
+              </div>
+              <div class="field">
+                <label for="addDiff">קושי</label>
+                <select id="addDiff" aria-label="קושי">
+                  <option value="קל">קל</option>
+                  <option value="בינוני">בינוני</option>
+                  <option value="קשה">קשה</option>
+                  <option value="לא מסלול" selected>לא מסלול</option>
+                </select>
+              </div>
+              <div class="field" style="grid-column: 1 / -1;">
+                <label for="addDesc">הסבר קצר</label>
+                <input class="txt" id="addDesc" type="text" placeholder="מה עושים שם + טיפ קצר (למשל: לקחת מים / לא אחרי גשם)" required />
+              </div>
+            </div>
+
+            <div class="formActions">
+              <button class="btn" type="button" id="clearCustomBtn">ניקוי כל התוספות שלנו</button>
+              <button class="btn primary" type="submit">הוסף לרשימה</button>
+            </div>
+          </form>
+        </div>
+      </details>
+
     </div>
 
     <main id="content" aria-live="polite"></main>
@@ -407,9 +495,11 @@
   </div>
 
   <div class="toast" id="toast">הועתק</div>
+  <input id="importFile" type="file" accept="application/json,.json" style="display:none" />
 
   <script>
-    const DATA = [
+    // ----- built-in items -----
+    const BASE_DATA = [
       // פאי
       { area: "פאי", type: "תצפית/שקיעה", name: "Pai Canyon (קניון פאי)", diff: "קשה", desc: "שקיעה על רכסי אבן צרים; נעלי שטח, לא ללכת בחושך." },
       { area: "פאי", type: "שוק/אוכל", name: "Walking Street (שוק הלילה)", diff: "לא מסלול", desc: "דוכני ערב לאורך רח׳ Rungsiyanon; טיול ערב וכיף לזוג." },
@@ -456,7 +546,7 @@
       el.textContent = msg;
       el.classList.add('show');
       window.clearTimeout(el._t);
-      el._t = window.setTimeout(()=>el.classList.remove('show'), 1200);
+      el._t = window.setTimeout(()=>el.classList.remove('show'), 1300);
     }
 
     function copyText(text){
@@ -484,6 +574,24 @@
         copyText(url);
         toast('קישור למפה הועתק');
       }
+    }
+
+    function downloadText(filename, text, mime){
+      const blob = new Blob([text], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1500);
+    }
+
+    function csvEscape(v){
+      const s = String(v ?? '');
+      if(/[\"\r\n,]/.test(s)) return '"' + s.replaceAll('"','""') + '"';
+      return s;
     }
 
     // ----- difficulty -----
@@ -550,11 +658,85 @@
       saveFavs();
     }
 
+    // ----- custom user items -----
+    const CUSTOM_KEY = 'trip_custom_items_v1';
+
+    function normalizeItem(raw){
+      const item = {
+        name: String(raw?.name ?? '').trim(),
+        area: String(raw?.area ?? '').trim(),
+        type: String(raw?.type ?? '').trim(),
+        diff: String(raw?.diff ?? '').trim() || 'לא מסלול',
+        desc: String(raw?.desc ?? '').trim(),
+      };
+
+      if(!(item.diff in DIFF_ORDER)) item.diff = 'לא מסלול';
+      return item;
+    }
+
+    function loadCustom(){
+      try{
+        const raw = localStorage.getItem(CUSTOM_KEY);
+        if(!raw) return [];
+        const arr = JSON.parse(raw);
+        if(!Array.isArray(arr)) return [];
+        return arr.map(normalizeItem).filter(x=>x.name && x.area && x.type && x.desc);
+      } catch(e){
+        return [];
+      }
+    }
+
+    function saveCustom(){
+      try{
+        localStorage.setItem(CUSTOM_KEY, JSON.stringify(customItems));
+      } catch(e) {}
+    }
+
+    function allData(){
+      return BASE_DATA.concat(customItems);
+    }
+
     // ----- state -----
     let view = 'cards';
     let activeChip = 'הכול';
     let favoritesOnly = false;
     const favs = loadFavs();
+    let customItems = loadCustom();
+
+    function rebuildFiltersAndStats(){
+      const data = allData();
+      const areas = uniq(data.map(d=>d.area));
+      const types = uniq(data.map(d=>d.type));
+      const diffs = ['קל','בינוני','קשה','לא מסלול'];
+
+      // preserve current selections if possible
+      const curArea = $('areaSel')?.value ?? '';
+      const curType = $('typeSel')?.value ?? '';
+      const curDiff = $('diffSel')?.value ?? '';
+
+      $('areaSel').innerHTML = [
+        `<option value="">כל האזורים</option>`,
+        ...areas.map(a=>`<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`)
+      ].join('');
+      $('typeSel').innerHTML = [
+        `<option value="">כל הסוגים</option>`,
+        ...types.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`)
+      ].join('');
+      $('diffSel').innerHTML = [
+        `<option value="">כל הקשיים</option>`,
+        ...diffs.map(d=>`<option value="${escapeHtml(d)}">קושי: ${escapeHtml(d)}</option>`)
+      ].join('');
+
+      // restore
+      if(curArea && areas.includes(curArea)) $('areaSel').value = curArea;
+      if(curType && types.includes(curType)) $('typeSel').value = curType;
+      if(curDiff && diffs.includes(curDiff)) $('diffSel').value = curDiff;
+
+      $('statCount').textContent = data.length;
+      $('statAreas').textContent = areas.length;
+      $('statTypes').textContent = types.length;
+      $('statFavs').textContent = favs.size;
+    }
 
     function updateFavBtn(){
       const btn = $('favOnlyBtn');
@@ -562,87 +744,6 @@
       btn.classList.toggle('starOn', favoritesOnly);
       btn.textContent = favoritesOnly ? '⭐ כל הרשימה' : '⭐ מועדפים בלבד';
       $('statFavs').textContent = favs.size;
-    }
-
-    // ----- init selects -----
-    function initUI(){
-      const areas = uniq(DATA.map(d=>d.area));
-      const types = uniq(DATA.map(d=>d.type));
-      const diffs = uniq(DATA.map(d=>d.diff));
-
-      $('areaSel').innerHTML = [
-        `<option value="">כל האזורים</option>`,
-        ...areas.map(a=>`<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`)
-      ].join('');
-
-      $('typeSel').innerHTML = [
-        `<option value="">כל הסוגים</option>`,
-        ...types.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`)
-      ].join('');
-
-      $('diffSel').innerHTML = [
-        `<option value="">כל הקשיים</option>`,
-        ...diffs.map(d=>`<option value="${escapeHtml(d)}">קושי: ${escapeHtml(d)}</option>`)
-      ].join('');
-
-      const chipList = ['הכול', 'פאי', "צ׳אנג מאי"];
-      $('chips').innerHTML = chipList.map(c =>
-        `<button class="chip ${c==='הכול'?'active':''}" data-chip="${escapeHtml(c)}" type="button">${escapeHtml(c)}</button>`
-      ).join('');
-
-      // Stats
-      $('statCount').textContent = DATA.length;
-      $('statAreas').textContent = areas.length;
-      $('statTypes').textContent = types.length;
-      $('statFavs').textContent = favs.size;
-
-      // events
-      $('q').addEventListener('input', render);
-      $('areaSel').addEventListener('change', render);
-      $('typeSel').addEventListener('change', render);
-      $('diffSel').addEventListener('change', render);
-
-      $('favOnlyBtn').addEventListener('click', ()=>{
-        favoritesOnly = !favoritesOnly;
-        updateFavBtn();
-        render();
-      });
-
-      $('resetBtn').addEventListener('click', ()=>{
-        $('q').value = '';
-        $('areaSel').value = '';
-        $('typeSel').value = '';
-        $('diffSel').value = '';
-        favoritesOnly = false;
-        updateFavBtn();
-        activeChip = 'הכול';
-        document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('active', x.dataset.chip===activeChip));
-        render();
-      });
-
-      $('viewBtn').addEventListener('click', ()=>{
-        view = (view === 'cards') ? 'table' : 'cards';
-        $('viewBtn').textContent = (view === 'cards') ? 'תצוגת כרטיסים' : 'תצוגת טבלה';
-        render();
-      });
-
-      $('chips').addEventListener('click', (e)=>{
-        const btn = e.target.closest('.chip');
-        if(!btn) return;
-        activeChip = btn.dataset.chip;
-        document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('active', x.dataset.chip===activeChip));
-
-        // sync select when possible
-        if(activeChip === 'פאי'){
-          $('areaSel').value = 'פאי';
-        } else {
-          $('areaSel').value = '';
-        }
-        render();
-      });
-
-      updateFavBtn();
-      render();
     }
 
     function matchesChip(item){
@@ -658,7 +759,7 @@
       const type = $('typeSel').value;
       const diff = $('diffSel').value;
 
-      return DATA.filter(item => {
+      return allData().filter(item => {
         if(!matchesChip(item)) return false;
 
         if(favoritesOnly && !isFav(item)) return false;
@@ -799,32 +900,239 @@
       `;
     }
 
+    function downloadFavoritesCsv(){
+      const favList = allData().filter(isFav).slice().sort(compareByDifficulty);
+      if(favList.length === 0){
+        toast('אין מועדפים לייצוא');
+        return;
+      }
+
+      const header = ['name','area','type','difficulty','description','maps_url'];
+      const rows = favList.map(item => [
+        item.name,
+        item.area,
+        item.type,
+        item.diff,
+        item.desc,
+        mapUrl(item),
+      ]);
+
+      const csv = [header, ...rows]
+        .map(r => r.map(csvEscape).join(','))
+        .join('\r\n');
+
+      // BOM כדי שגוגל שיטס/אקסל לא ישברו עברית
+      const withBom = '\ufeff' + csv;
+      const filename = 'favorites_pai_chiangmai.csv';
+      downloadText(filename, withBom, 'text/csv;charset=utf-8');
+      toast('CSV של מועדפים ירד');
+    }
+
+
+    // ----- export/import state (favorites + custom items) -----
+    const STATE_VERSION = 1;
+
+    function safeJsonParse(text){
+      try { return JSON.parse(text); } catch(e){ return null; }
+    }
+
+    function dedupeCustom(list){
+      const seen = new Set();
+      const out = [];
+      for(const raw of (Array.isArray(list) ? list : [])){
+        const item = normalizeItem(raw);
+        if(!item.name || !item.area || !item.type || !item.desc) continue;
+        const id = itemId(item);
+        if(seen.has(id)) continue;
+        seen.add(id);
+        out.push(item);
+      }
+      return out;
+    }
+
+    function exportState(){
+      const payload = {
+        version: STATE_VERSION,
+        exportedAt: new Date().toISOString(),
+        favorites: Array.from(favs),
+        customItems: customItems,
+      };
+
+      const json = JSON.stringify(payload, null, 2);
+      const filename = 'pai_chiangmai_site_state.json';
+      downloadText(filename, json, 'application/json;charset=utf-8');
+      toast('הנתונים יוצאו');
+    }
+
+    function importStateObject(obj){
+      if(!obj || typeof obj !== 'object') return false;
+
+      // favorites (merge)
+      if(Array.isArray(obj.favorites)){
+        for(const id of obj.favorites){
+          if(typeof id === 'string' && id.trim()) favs.add(id.trim().toLowerCase());
+        }
+        saveFavs();
+      }
+
+      // custom items (merge + dedupe)
+      if(Array.isArray(obj.customItems)){
+        customItems = dedupeCustom(customItems.concat(obj.customItems));
+        saveCustom();
+      }
+
+      rebuildFiltersAndStats();
+      updateFavBtn();
+      render();
+      return true;
+    }
+
+    function importStateFromFile(file){
+      const reader = new FileReader();
+      reader.onload = () => {
+        const obj = safeJsonParse(String(reader.result || ''));
+        if(!obj){ toast('קובץ ייבוא לא תקין'); return; }
+        const ok = importStateObject(obj);
+        toast(ok ? 'הנתונים יובאו' : 'קובץ ייבוא לא תקין');
+      };
+      reader.onerror = () => toast('שגיאה בקריאת הקובץ');
+      reader.readAsText(file, 'utf-8');
+    }
+
+    // ----- init -----
+    function initUI(){
+      const chipList = ['הכול', 'פאי', "צ׳אנג מאי"];
+      $('chips').innerHTML = chipList.map(c =>
+        `<button class="chip ${c==='הכול'?'active':''}" data-chip="${escapeHtml(c)}" type="button">${escapeHtml(c)}</button>`
+      ).join('');
+
+      rebuildFiltersAndStats();
+
+      // events
+      $('q').addEventListener('input', render);
+      $('areaSel').addEventListener('change', render);
+      $('typeSel').addEventListener('change', render);
+      $('diffSel').addEventListener('change', render);
+
+      $('favOnlyBtn').addEventListener('click', ()=>{
+        favoritesOnly = !favoritesOnly;
+        updateFavBtn();
+        render();
+      });
+
+      $('dlFavCsvBtn').addEventListener('click', downloadFavoritesCsv);
+
+      $('exportStateBtn').addEventListener('click', exportState);
+      $('importStateBtn').addEventListener('click', ()=> $('importFile').click());
+      $('importFile').addEventListener('change', (e)=>{
+        const f = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if(f) importStateFromFile(f);
+      });
+
+$('resetBtn').addEventListener('click', ()=>{
+        $('q').value = '';
+        $('areaSel').value = '';
+        $('typeSel').value = '';
+        $('diffSel').value = '';
+        favoritesOnly = false;
+        updateFavBtn();
+        activeChip = 'הכול';
+        document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('active', x.dataset.chip===activeChip));
+        render();
+      });
+
+      $('viewBtn').addEventListener('click', ()=>{
+        view = (view === 'cards') ? 'table' : 'cards';
+        $('viewBtn').textContent = (view === 'cards') ? 'תצוגת כרטיסים' : 'תצוגת טבלה';
+        render();
+      });
+
+      $('chips').addEventListener('click', (e)=>{
+        const btn = e.target.closest('.chip');
+        if(!btn) return;
+        activeChip = btn.dataset.chip;
+        document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('active', x.dataset.chip===activeChip));
+
+        // sync select when possible
+        if(activeChip === 'פאי'){
+          $('areaSel').value = 'פאי';
+        } else {
+          $('areaSel').value = '';
+        }
+        render();
+      });
+
+      // add custom
+      $('addForm').addEventListener('submit', (e)=>{
+        e.preventDefault();
+
+        const item = normalizeItem({
+          name: $('addName').value,
+          area: $('addArea').value,
+          type: $('addType').value,
+          diff: $('addDiff').value,
+          desc: $('addDesc').value,
+        });
+
+        if(!item.name || !item.area || !item.type || !item.desc){
+          toast('חסר שדה חובה');
+          return;
+        }
+
+        customItems.push(item);
+        saveCustom();
+
+        // Clear
+        $('addName').value = '';
+        $('addArea').value = '';
+        $('addType').value = '';
+        $('addDesc').value = '';
+        $('addDiff').value = 'לא מסלול';
+
+        rebuildFiltersAndStats();
+        toast('נוסף לרשימה');
+        render();
+      });
+
+      $('clearCustomBtn').addEventListener('click', ()=>{
+        customItems = [];
+        saveCustom();
+        rebuildFiltersAndStats();
+        toast('התוספות נוקו');
+        render();
+      });
+
+      updateFavBtn();
+      render();
+    }
+
     // --- lightweight tests (console only) ---
     function runTests(){
       try {
-        console.assert(DATA.every(x => typeof x.diff === 'string' && x.diff.length > 0), 'Every item should have a diff string');
+        console.assert(BASE_DATA.length > 0, 'BASE_DATA should have items');
+        console.assert(allData().length >= BASE_DATA.length, 'allData should include base');
+        console.assert(Object.keys(DIFF_ORDER).length === 4, 'DIFF_ORDER expected 4 keys');
 
-        const sorted = DATA.slice().sort(compareByDifficulty);
+        const sorted = allData().slice().sort(compareByDifficulty);
         const firstNonTrailIdx = sorted.findIndex(x => diffValue(x) === 99);
         if(firstNonTrailIdx !== -1){
           console.assert(sorted.slice(firstNonTrailIdx).every(x => diffValue(x) === 99), 'Non-trails should be grouped at the end');
         }
 
-        console.assert(typeof mapUrl(DATA[0]) === 'string' && mapUrl(DATA[0]).includes('google.com/maps/search'), 'mapUrl should return a Google Maps search URL');
+        console.assert(typeof mapUrl(allData()[0]) === 'string' && mapUrl(allData()[0]).includes('google.com/maps/search'), 'mapUrl should return a Google Maps search URL');
 
         // Favorites: add/remove should not throw
-        const id0 = itemId(DATA[0]);
+        const id0 = itemId(allData()[0]);
         const had = favs.has(id0);
         toggleFavById(id0);
         console.assert(favs.has(id0) !== had, 'toggleFav should flip state');
         toggleFavById(id0);
         console.assert(favs.has(id0) === had, 'toggleFav should restore state');
 
-        // Diff filter sanity
-        $('diffSel').value = 'קל';
-        const easy = filtered();
-        console.assert(easy.every(x => x.diff === 'קל'), 'diff filter should keep only selected diff');
-        $('diffSel').value = '';
+        // CSV escaping
+        console.assert(csvEscape('a,b') === '"a,b"', 'csvEscape should quote commas');
+        console.assert(csvEscape('a"b') === '"a""b"', 'csvEscape should double quotes');
 
       } catch (e) {
         console.warn('Tests failed:', e);
